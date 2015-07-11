@@ -26,7 +26,7 @@ function clearCanvas(){
   ctx.save();
   ctx.fillStyle="#ffffff";
   ctx.beginPath();
-  ctx.rect(0,0,1,1);
+  ctx.rect(-100,-100,200,200);
   ctx.fill();
   ctx.restore();
 }
