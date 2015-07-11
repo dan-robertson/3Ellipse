@@ -4,7 +4,8 @@ var pix;                        //The size of 1px in current transform
 
 var stringLength = 2.0;
 var trianglePoints = [[0.1,0.1],[0.5,0.4],[0.8,0.1],[0.5,0.5]];
-var pointsTested = [];//array of [x,y,in]. in is a boolean.
+var tpToMove = 0;
+var pointsTested = [];//array of [x,y].
 
 function randomPoint(){//returns a random vector in [0,1]^2 (uniform)
   return [Math.random(), Math.random()];
@@ -19,12 +20,15 @@ function transformContext(){
 
 
 function drawTrianglePoints(){
+  ctx.save();
   for(let i = 0; i<3; i++){
     let [x,y] = trianglePoints[i];
     ctx.beginPath();
     ctx.arc(x, y, 5 * pix, 0, 2*Math.PI, false);
+    ctx.fillStyle = tpToMove==i ? "#500" : "#000";
     ctx.fill();
   }
+  ctx.restore();
 }
 
 function drawTriangleLines(){
@@ -41,10 +45,10 @@ function drawTriangleLines(){
 function drawTestedPoints(){
   ctx.save();
   for(let i = 0; i < pointsTested.length; i++){
-    let [x,y,p] = pointsTested[i];
+    let [x,y] = pointsTested[i];
     ctx.beginPath();
     ctx.arc(x, y, pix, 0, 2*Math.PI, false);
-    ctx.fillStyle = p ? "#0000ff" : "#ff0000";
+    ctx.fillStyle = "#0000ff";
     ctx.fill();
   }
   ctx.restore();
@@ -67,12 +71,16 @@ function testNewPoint(){
   let r = randomPoint();
   trianglePoints[3] = r;
   let p = perimeter(d3.geom.hull(trianglePoints)) <= stringLength;
-  pointsTested.push([r[0], r[1], p]);
+  if(p) pointsTested.push(r);
 }
 
 function testPoints(n){
   for(let i = 0; i<n; i++)
     testNewPoint();
+}
+
+function simplifyTestedPoints(){
+  pointsTested = d3.geom.hull(pointsTested);
 }
 
 function draw(){
@@ -82,12 +90,35 @@ function draw(){
   drawTriangleLines();
   drawTrianglePoints();
   testPoints(1000);
+  simplifyTestedPoints();
 
   window.requestAnimationFrame(draw);
 }
 
+//used to convert from canvas to normal coords
+function canvasToCoords(canvasx, canvasy){
+  return [canvasx * pix, canvasy * pix];
+}
+
+
 window.addEventListener("load", function(){
   canvas = document.getElementById("c");
   ctx = canvas.getContext("2d");
+
+  canvas.addEventListener("mousedown", function(e){
+    let c = canvasToCoords(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+    if(e.button === 0){
+      trianglePoints[tpToMove]=c;
+      pointsTested=[];
+    } else {
+      trianglePoints[3] = c;
+      stringLength = perimeter(trianglePoints);
+      pointsTested=[];
+    }
+  });
+  canvas.addEventListener("mouseup", function(e){
+    tpToMove = (tpToMove + 1) % 3;
+  });
+
   window.requestAnimationFrame(draw);
 });
