@@ -2,7 +2,7 @@ var canvas;
 var ctx;
 var pix;                        //The size of 1px in current transform
 
-var stringLength = 2.0;
+var stringLength = 1.5;
 var trianglePoints = [[0.1,0.1],[0.5,0.4],[0.8,0.1],[0.5,0.5]];
 var tpToMove = 0;
 var pointsTested = [];//array of [x,y].
